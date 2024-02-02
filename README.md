@@ -1,6 +1,12 @@
 # Twilio Delphi Demo
 
-Learn how to make a phone call or send a text message in Delphi! Written and tested using Delphi 10.2.3.
+Learn how to 
+  - make a phone call 
+  - send a text message
+  - recover message history
+  - delete a specific message
+
+Written and tested using Delphi 11.2
 
 ## Docs
 
