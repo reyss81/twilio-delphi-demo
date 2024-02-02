@@ -12,9 +12,11 @@ uses
   System.Net.URLClient;
 
 type
+
   TTwilioClientResponse = record
     Success: boolean;
-    ResponseData: TJSONValue;
+    postResponse: TJSONValue;
+    getResponse: TJSONArray;
     HTTPResponse: IHTTPResponse;
   end;
 
@@ -42,6 +44,13 @@ type
       version: string = '2010-04-01'; prefix: string = '/Accounts/{sid}')
       : TTwilioClientResponse;
 
+    function Get(resource: string; params: TStrings; domain: string = 'api';
+      version: string = '2010-04-01'; prefix: string = '/Accounts/{sid}')
+      : TTwilioClientResponse;
+
+    function Del(resource: string; sid: string; domain: string = 'api';
+      version: string = '2010-04-01'; prefix: string = '/Accounts/{sid}')
+      : TTwilioClientResponse;
 end;
 
 implementation
@@ -55,12 +64,27 @@ begin
     FAccountSid := UserName
   else
     FAccountSid := AccountSid;
-
   FHttpClient := TNetHttpClient.Create(nil);
   FHttpClient.OnAuthEvent := AuthEventHandler;
-
   FRequest := TNetHTTPRequest.Create(nil);
   FRequest.Client := FHttpClient;
+end;
+
+function TTwilioClient.Del(resource, sid, domain, version,
+  prefix: string): TTwilioClientResponse;
+var
+  url: String;
+  response: TTwilioClientResponse;
+begin
+  url := 'https://' + domain + '.twilio.com/' + version + prefix + '/' +
+    resource + '/'+sid+'.json';
+  if ContainsText(url, '{sid}') then
+    url := ReplaceText(url, '{sid}', FAccountSid);
+  response.HTTPResponse := FRequest.Delete(url);
+  response.Success := (response.HTTPResponse.StatusCode >= 200) and
+    (response.HTTPResponse.StatusCode <= 299) and
+    (response.postResponse <> nil);
+  Result := response;
 end;
 
 destructor TTwilioClient.Destroy;
@@ -68,6 +92,24 @@ begin
   inherited;
   FRequest.Free;
   FHttpClient.Free;
+end;
+
+function TTwilioClient.Get(resource: string; params: TStrings; domain, version,
+  prefix: string): TTwilioClientResponse;
+var
+  url: String;
+  response: TTwilioClientResponse;
+begin
+  url := 'https://' + domain + '.twilio.com/' + version + prefix + '/' + resource + '.json';
+  if ContainsText(url, '{sid}') then
+    url := ReplaceText(url, '{sid}', FAccountSid);
+  response.HTTPResponse := FRequest.Get(url);
+  response.postResponse := TJSONObject.ParseJSONValue(response.HTTPResponse.ContentAsString(TEncoding.UTF8));
+  response.getResponse := response.postResponse.GetValue<TJSONArray>('messages');
+  response.Success := (response.HTTPResponse.StatusCode >= 200) and
+    (response.HTTPResponse.StatusCode <= 299) and
+    (response.getResponse <> nil);
+  Result := response;
 end;
 
 function TTwilioClient.Post(resource: string; params: TStrings;
@@ -82,13 +124,11 @@ begin
   if ContainsText(url, '{sid}') then
     url := ReplaceText(url, '{sid}', FAccountSid);
   response.HTTPResponse := FRequest.Post(url, params);
-  response.ResponseData := TJSONObject.ParseJSONValue(
+  response.postResponse := TJSONObject.ParseJSONValue(
     response.HTTPResponse.ContentAsString(TEncoding.UTF8));
-
   response.Success := (response.HTTPResponse.StatusCode >= 200) and
     (response.HTTPResponse.StatusCode <= 299) and
-    (response.ResponseData <> nil);
-
+    (response.postResponse <> nil);
   Result := response;
 end;
 
