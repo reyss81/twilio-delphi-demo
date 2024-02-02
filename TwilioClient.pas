@@ -15,8 +15,7 @@ type
 
   TTwilioClientResponse = record
     Success: boolean;
-    postResponse: TJSONValue;
-    getResponse: TJSONArray;
+    ResponseData: TJSONValue;
     HTTPResponse: IHTTPResponse;
   end;
 
@@ -83,7 +82,7 @@ begin
   response.HTTPResponse := FRequest.Delete(url);
   response.Success := (response.HTTPResponse.StatusCode >= 200) and
     (response.HTTPResponse.StatusCode <= 299) and
-    (response.postResponse <> nil);
+    (response.ResponseData <> nil);
   Result := response;
 end;
 
@@ -104,11 +103,10 @@ begin
   if ContainsText(url, '{sid}') then
     url := ReplaceText(url, '{sid}', FAccountSid);
   response.HTTPResponse := FRequest.Get(url);
-  response.postResponse := TJSONObject.ParseJSONValue(response.HTTPResponse.ContentAsString(TEncoding.UTF8));
-  response.getResponse := response.postResponse.GetValue<TJSONArray>('messages');
+  response.ResponseData := TJSONObject.ParseJSONValue(response.HTTPResponse.ContentAsString(TEncoding.UTF8));
   response.Success := (response.HTTPResponse.StatusCode >= 200) and
     (response.HTTPResponse.StatusCode <= 299) and
-    (response.getResponse <> nil);
+    (response.ResponseData <> nil);
   Result := response;
 end;
 
@@ -124,11 +122,11 @@ begin
   if ContainsText(url, '{sid}') then
     url := ReplaceText(url, '{sid}', FAccountSid);
   response.HTTPResponse := FRequest.Post(url, params);
-  response.postResponse := TJSONObject.ParseJSONValue(
+  response.ResponseData := TJSONObject.ParseJSONValue(
     response.HTTPResponse.ContentAsString(TEncoding.UTF8));
   response.Success := (response.HTTPResponse.StatusCode >= 200) and
     (response.HTTPResponse.StatusCode <= 299) and
-    (response.postResponse <> nil);
+    (response.ResponseData <> nil);
   Result := response;
 end;
 

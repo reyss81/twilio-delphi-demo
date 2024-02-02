@@ -1,9 +1,6 @@
 program TwilioDemo;
-
 {$APPTYPE CONSOLE}
-
 {$R *.res}
-
 uses
   System.Classes,
   System.SysUtils,
@@ -16,21 +13,19 @@ var
   allParams: TStringList;
   response: TTwilioClientResponse;
   json: TJSONValue;
+  jsonArray: TJSONArray;
   fromPhoneNumber: string;
   toPhoneNumber: string;
   jsonValue: TJSONValue;
   sms_sid: string;
-
 begin
   try
     // Create environment variables (named below) with your Twilio credentials
     // Run as administrator to get access to the enviroment variables
     client := TTwilioClient.Create(GetEnvironmentVariable('TWILIO_ACCOUNT_SID'),
                                    GetEnvironmentVariable('TWILIO_AUTH_TOKEN'));
-
     toPhoneNumber := '5555555555';     //replace for a valid phone number...for trials, this needs to be your mobile
-    fromPhoneNumber := '+15555555555'; //replace for your twilio virtual phone number
-
+    fromPhoneNumber := '+5555555555'; //replace for your twilio virtual phone number
     // Make a phone call
     Writeln('----- Phone Call -----');
     allParams := TStringList.Create;
@@ -39,12 +34,11 @@ begin
     allParams.Add('Url=http://demo.twilio.com/docs/voice.xml');
     response := client.Post('Calls', allParams);
     if response.Success then
-      Writeln('Call SID: ' + response.postResponse.GetValue<string>('sid'))
-    else if response.postResponse <> nil then
-      Writeln(response.postResponse.ToString)
+      Writeln('Call SID: ' + response.ResponseData.GetValue<string>('sid'))
+    else if response.ResponseData <> nil then
+      Writeln(response.ResponseData.ToString)
     else
       Writeln('HTTP status: ' + response.HTTPResponse.StatusCode.ToString);
-
     // Send a text message
     Writeln('----- SMS -----');
     allParams := TStringList.Create;
@@ -53,28 +47,27 @@ begin
     allParams.Add('Body=Hola Mundo desde Delphi');
     response := client.Post('Messages', allParams);
     if response.Success then
-      Writeln('Message SID: ' + response.postResponse.GetValue<string>('sid'))
-    else if response.postResponse <> nil then
-      Writeln(response.postResponse.ToString)
+      Writeln('Message SID: ' + response.ResponseData.GetValue<string>('sid'))
+    else if response.ResponseData <> nil then
+      Writeln(response.ResponseData.ToString)
     else
       Writeln('HTTP status: ' + response.HTTPResponse.StatusCode.ToString);
-
     // GET all messages from the Messages resource
     Writeln('----- SMS -----');
     response := client.Get('Messages',allParams);
     if response.Success then
     begin
-      for jsonValue in response.getResponse do
+      jsonArray := response.ResponseData.GetValue<TJSONArray>('messages');
+      for jsonValue in jsonArray do
       begin
          Writeln('Message SID: ' + jsonValue.GetValue<string>('sid'));
          Writeln('Message Body: ' + jsonValue.GetValue<string>('body'));
       end;
     end else
-      if response.getResponse <> nil then
-        Writeln(response.getResponse.ToString)
+      if response.ResponseData <> nil then
+        Writeln(response.ResponseData.ToString)
       else
         Writeln('HTTP status: ' + response.HTTPResponse.StatusCode.ToString);
-
     // delete a message
     writeln;
     write('Enter de sms SID: ');
@@ -84,11 +77,9 @@ begin
       Writeln(sms_sid + ' deleted')
     else
       Writeln('HTTP status: ' + response.HTTPResponse.StatusCode.ToString);
-
   finally
     client.Free;
   end;
-
   Writeln('Press ENTER to exit.');
   Readln;
 end.
