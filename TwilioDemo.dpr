@@ -24,8 +24,8 @@ begin
     // Run as administrator to get access to the enviroment variables
     client := TTwilioClient.Create(GetEnvironmentVariable('TWILIO_ACCOUNT_SID'),
                                    GetEnvironmentVariable('TWILIO_AUTH_TOKEN'));
-    toPhoneNumber := '5555555555';     //replace for a valid phone number...for trials, this needs to be your mobile
-    fromPhoneNumber := '+5555555555'; //replace for your twilio virtual phone number
+    toPhoneNumber := '8132309883';     //replace for a valid phone number...for trials, this needs to be your mobile
+    fromPhoneNumber := '+18552230459'; //replace for your twilio virtual phone number
     // Make a phone call
     Writeln('----- Phone Call -----');
     allParams := TStringList.Create;

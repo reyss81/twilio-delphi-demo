@@ -73,17 +73,15 @@ function TTwilioClient.Del(resource, sid, domain, version,
   prefix: string): TTwilioClientResponse;
 var
   url: String;
-  response: TTwilioClientResponse;
 begin
   url := 'https://' + domain + '.twilio.com/' + version + prefix + '/' +
     resource + '/'+sid+'.json';
   if ContainsText(url, '{sid}') then
     url := ReplaceText(url, '{sid}', FAccountSid);
-  response.HTTPResponse := FRequest.Delete(url);
-  response.Success := (response.HTTPResponse.StatusCode >= 200) and
-    (response.HTTPResponse.StatusCode <= 299) and
-    (response.ResponseData <> nil);
-  Result := response;
+  Result.HTTPResponse := FRequest.Delete(url);
+  Result.Success := (Result.HTTPResponse.StatusCode >= 200) and
+    (Result.HTTPResponse.StatusCode <= 299) and
+    (Result.ResponseData <> nil);
 end;
 
 destructor TTwilioClient.Destroy;
@@ -97,17 +95,15 @@ function TTwilioClient.Get(resource: string; params: TStrings; domain, version,
   prefix: string): TTwilioClientResponse;
 var
   url: String;
-  response: TTwilioClientResponse;
 begin
   url := 'https://' + domain + '.twilio.com/' + version + prefix + '/' + resource + '.json';
   if ContainsText(url, '{sid}') then
     url := ReplaceText(url, '{sid}', FAccountSid);
-  response.HTTPResponse := FRequest.Get(url);
-  response.ResponseData := TJSONObject.ParseJSONValue(response.HTTPResponse.ContentAsString(TEncoding.UTF8));
-  response.Success := (response.HTTPResponse.StatusCode >= 200) and
-    (response.HTTPResponse.StatusCode <= 299) and
-    (response.ResponseData <> nil);
-  Result := response;
+  Result.HTTPResponse := FRequest.Get(url);
+  Result.ResponseData := TJSONObject.ParseJSONValue(Result.HTTPResponse.ContentAsString(TEncoding.UTF8));
+  Result.Success := (Result.HTTPResponse.StatusCode >= 200) and
+    (Result.HTTPResponse.StatusCode <= 299) and
+    (Result.ResponseData <> nil);
 end;
 
 function TTwilioClient.Post(resource: string; params: TStrings;
@@ -115,19 +111,17 @@ function TTwilioClient.Post(resource: string; params: TStrings;
   prefix: string = '/Accounts/{sid}'): TTwilioClientResponse;
 var
   url: String;
-  response: TTwilioClientResponse;
 begin
   url := 'https://' + domain + '.twilio.com/' + version + prefix + '/' +
     resource + '.json';
   if ContainsText(url, '{sid}') then
     url := ReplaceText(url, '{sid}', FAccountSid);
-  response.HTTPResponse := FRequest.Post(url, params);
-  response.ResponseData := TJSONObject.ParseJSONValue(
-    response.HTTPResponse.ContentAsString(TEncoding.UTF8));
-  response.Success := (response.HTTPResponse.StatusCode >= 200) and
-    (response.HTTPResponse.StatusCode <= 299) and
-    (response.ResponseData <> nil);
-  Result := response;
+  Result.HTTPResponse := FRequest.Post(url, params);
+  Result.ResponseData := TJSONObject.ParseJSONValue(
+    Result.HTTPResponse.ContentAsString(TEncoding.UTF8));
+  Result.Success := (Result.HTTPResponse.StatusCode >= 200) and
+    (Result.HTTPResponse.StatusCode <= 299) and
+    (Result.ResponseData <> nil);
 end;
 
 procedure TTwilioClient.AuthEventHandler(const Sender: TObject;
