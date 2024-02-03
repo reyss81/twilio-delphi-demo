@@ -4,6 +4,7 @@ interface
 
 uses
   System.Classes,
+  System.DateUtils,
   System.JSON,
   System.StrUtils,
   System.SysUtils,
@@ -50,6 +51,8 @@ type
     function Del(resource: string; sid: string; domain: string = 'api';
       version: string = '2010-04-01'; prefix: string = '/Accounts/{sid}')
       : TTwilioClientResponse;
+
+    function twilioDateConvert(twilioDate: string): TDateTime;
 end;
 
 implementation
@@ -122,6 +125,83 @@ begin
   Result.Success := (Result.HTTPResponse.StatusCode >= 200) and
     (Result.HTTPResponse.StatusCode <= 299) and
     (Result.ResponseData <> nil);
+end;
+
+function TTwilioClient.twilioDateConvert(twilioDate: string): TDateTime;
+const
+  iFormat= 'ddd, DD MM YYYY HH:NN:SS +ZZZZ';
+  iMonths: array[1..12] of string= ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
+
+var
+  AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond: Word;
+  aPos: Integer;
+
+  procedure InitVars;
+  begin
+    AYear := 1;
+    AMonth := 1;
+    ADay := 1;
+    AHour := 0;
+    AMinute := 0;
+    ASecond := 0;
+    AMilliSecond := 0;
+  end;
+
+  function GetPart(const iPart: Char): Word;
+  var
+    aYCnt: Integer;
+  begin
+    Result := 0;
+    aYCnt := 0;
+
+    while (aPos <= High(iFormat)) and (iFormat.Chars[aPos + aYCnt] = iPart) do
+      inc(aYCnt);
+
+    Result := StrToInt(twilioDate.Substring(aPos, aYCnt));
+
+    aPos := aPos + aYCnt;
+  end;
+
+begin
+  InitVars;
+
+  for aPos:= 1 to 12 do
+  begin
+    if pos(iMonths[aPos],twilioDate)>0 then
+    begin
+      if aPos<10 then
+        twilioDate:= StringReplace(twilioDate,iMonths[aPos],'0'+IntToStr(aPos),[rfReplaceAll, rfIgnoreCase])
+      else
+        twilioDate:= StringReplace(twilioDate,iMonths[aPos],IntToStr(aPos),[rfReplaceAll, rfIgnoreCase]);
+      break;
+    end;
+  end;
+
+  aPos := 0;
+  while aPos <= High(iFormat) do
+  begin
+    case iFormat.Chars[aPos] of
+      'Y':
+        AYear := GetPart('Y');
+      'M':
+        AMonth := GetPart('M');
+      'D':
+        ADay := GetPart('D');
+      'H':
+        AHour := GetPart('H');
+      'N':
+        AMinute := GetPart('N');
+      'S':
+        ASecond := GetPart('S');
+      'Z':
+        AMilliSecond := GetPart('Z');
+    else
+      inc(aPos);
+    end;
+  end;
+
+  Result := EncodeDateTime(AYear, AMonth, ADay, AHour, AMinute, ASecond,
+    AMilliSecond);
 end;
 
 procedure TTwilioClient.AuthEventHandler(const Sender: TObject;
